@@ -22,8 +22,6 @@ https://user-images.githubusercontent.com/11604549/164133916-a8ac4c21-d287-434a-
 - **Make sure the bot has a role that is higher than the roles it will assign or else you will get a 403 error**
 
 ### Update the .env with your values
-` 
-REACT_APP_CHAIN_REST="" 
-REACT_APP_NFT_CONTRACT_ADDRESS=""
-
-`
+>REACT_APP_CHAIN_REST="" 
+>
+>REACT_APP_NFT_CONTRACT_ADDRESS=""
