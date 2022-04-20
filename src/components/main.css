@@ -1,0 +1,40 @@
+
+.main{
+    padding: 20px;
+}
+
+.connect-btn{
+    background-color: #24a0ed !important;
+    padding:20px;
+}
+
+#discord-form-container{
+    width: 500px;
+    height: 200px;
+    background-color: #282a36;
+    padding: 40px;
+}
+
+#discord-tag-input{ 
+    padding: 10px 0 30px 0;
+}
+
+h3{
+    color: #fff;
+}
+
+.snackbar .MuiPaper-root{
+    color: #fff;
+    background-color: #282a36;
+}
+
+.button-container{
+    position: relative;
+}
+.progress-spinner{
+    margin-left: 10px;
+    width: 25px !important;
+    height: 25px !important;
+    position: absolute;
+    top: 5px;
+}
