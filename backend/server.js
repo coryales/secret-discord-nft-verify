@@ -21,6 +21,7 @@ const chainInfo = {
     nftContractAddress: process.env.NFT_CONTRACT_ADDRESS
 };
 
+const roleNameToAdd = "Wolf";
 const discordToken = process.env.DISCORD_TOKEN;
 const guildId = process.env.DISCORD_GUILD_ID;
 const client = new Client({
@@ -38,7 +39,7 @@ app.get("/test", (req, res) => {
 
 app.post("/validatediscord", async function (req, res) {
     const guild = client.guilds.cache.get(guildId);
-    const roleToAdd = guild.roles.cache.find((r) => r.name === "Wolf");
+    const roleToAdd = guild.roles.cache.find((r) => r.name === roleNameToAdd);
 
     let response = { msg: "" };
 
@@ -76,6 +77,11 @@ app.post("/validatediscord", async function (req, res) {
                     if (userRole) {
                         response.msg = "You are already a verified member";
                     } else {
+                        member.roles.add(roleToAdd);
+                        member.send(
+                            "Welcome to the Club! You now have the role of " +
+                                roleToAdd.name
+                        );
                         response.msg = "Welcome to the Club!!!";
                     }
                 }
@@ -84,7 +90,6 @@ app.post("/validatediscord", async function (req, res) {
             response.msg = "Invalid Request";
         }
     } catch (error) {
-        console.log(error);
         response.msg = "You could not be verified";
     }
 
