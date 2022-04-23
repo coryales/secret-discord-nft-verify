@@ -1,5 +1,6 @@
 require("dotenv").config({ path: "./.env" });
 
+const { openMessage } = require("curve25519-js");
 const express = require("express");
 const cors = require("cors");
 const { CosmWasmClient } = require("secretjs");
@@ -39,76 +40,62 @@ app.post("/validatediscord", async function (req, res) {
     const guild = client.guilds.cache.get(guildId);
     const roleToAdd = guild.roles.cache.find((r) => r.name === "Wolf");
 
-    // Fetch for the user from members instead of members.cache. Cache isn't always correct
-    const member = await guild.members
-        .fetch()
-        .then((members) =>
-            members.find((member) => member.user.tag === req.body.discordTag)
-        );
     let response = { msg: "" };
 
     try {
-        // Send message back if user is not part of the discord guild
-        if (!member) {
-            response.msg = "You are not a member of the discord";
-        } else {
-            const userRole = member.roles.cache.find(
-                (r) => r.id === roleToAdd.id
+        if (req.body.tokenId) {
+            // Check if user is owner of an NFT and add role
+            const metaData = await queryMetadata(req.body.tokenId);
+            const pubKey = metaData.nft_dossier.public_metadata.extension.key;
+            const uint8key = Uint8Array.from(pubKey);
+            const signedMessage = Uint8Array.from(
+                req.body.signedMessage.split(",")
             );
+            const openedMessage = openMessage(uint8key, signedMessage);
+            const discordTag = new TextDecoder().decode(openedMessage);
 
-            // If user tries to verify more than once tell them they are already verified
-            if (userRole) {
-                response.msg = "You are already a verified member";
+            if (!openMessage || !discordTag) {
+                response.msg = "You could not be verified";
             } else {
-                // Check if user is owner of an NFT and add role
-                // If anything is wrong in the request such as an invalid tokenId or sig then it'll drop into the catch
-                const metaData = await queryMetadata(
-                    req.body.clientSignature,
-                    req.body.tokenId
-                );
-
-                if (
-                    metaData.nft_dossier &&
-                    metaData.nft_dossier.owner === req.body.clientAddress
-                ) {
-                    member.roles.add(roleToAdd);
-                    member.send(
-                        "Welcome to the Club! You now have the role of " +
-                            roleToAdd.name
+                // Fetch for the user from members instead of members.cache. Cache isn't always correct
+                const member = await guild.members
+                    .fetch()
+                    .then((members) =>
+                        members.find((member) => member.user.tag === discordTag)
                     );
 
-                    response.msg = "Welcome to the Club!!!";
+                // Send message back if user is not part of the discord guild
+                if (!member) {
+                    response.msg = "You are not a member of the discord";
                 } else {
-                    response.msg = "You could not be verified";
+                    const userRole = member.roles.cache.find(
+                        (r) => r.id === roleToAdd.id
+                    );
+
+                    // If user tries to verify more than once tell them they are already verified
+                    if (userRole) {
+                        response.msg = "You are already a verified member";
+                    } else {
+                        response.msg = "Welcome to the Club!!!";
+                    }
                 }
             }
+        } else {
+            response.msg = "Invalid Request";
         }
     } catch (error) {
+        console.log(error);
         response.msg = "You could not be verified";
     }
 
     res.end(JSON.stringify(response));
 });
 
-const queryMetadata = async (clientSignature, tokenId) => {
+const queryMetadata = async (tokenId) => {
     const client = new CosmWasmClient(chainInfo.chainREST);
-
     const msg = {
-        with_permit: {
-            query: {
-                nft_dossier: {
-                    token_id: tokenId
-                }
-            },
-            permit: {
-                params: {
-                    permit_name: "get nfts",
-                    allowed_tokens: [chainInfo.nftContractAddress],
-                    chain_id: chainInfo.chainId,
-                    permissions: ["owner"]
-                },
-                signature: clientSignature
-            }
+        nft_dossier: {
+            token_id: tokenId
         }
     };
     const data = await client.queryContractSmart(

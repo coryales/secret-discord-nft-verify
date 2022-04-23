@@ -11,6 +11,7 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^0.26.1",
     "cors": "^2.8.5",
+    "curve25519-js": "^0.0.4",
     "discord.js": "^13.6.0",
     "express": "^4.17.3",
     "react": "^18.0.0",

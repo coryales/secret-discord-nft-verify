@@ -79,12 +79,10 @@ const queryMetadata = async (chainInfo, tokenId) => {
     return data;
 };
 
-const validatediscord = async (discordTag, chainInfo, tokenId) => {
+const validatediscord = async (signedMessage, tokenId) => {
     debugger;
     return axios.post("http://localhost:5000/validatediscord", {
-        discordTag,
-        clientAddress: chainInfo.clientAddress,
-        clientSignature: chainInfo.clientSignature,
+        signedMessage,
         tokenId
     });
 };

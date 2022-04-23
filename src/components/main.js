@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { keplrConnect, getPermit } from "../helpers/KeplrConnect";
 import { SigningCosmWasmClient } from "secretjs";
-import { queryOwnedTokens, validatediscord } from "../helpers/Queries";
+import {
+    queryMetadata,
+    queryOwnedTokens,
+    validatediscord
+} from "../helpers/Queries";
+import { signMessage } from "curve25519-js";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
@@ -55,12 +60,22 @@ function Main() {
             if (chainInfo.clientSignature) {
                 setisLoading(true);
                 const owned = await queryOwnedTokens(chainInfo);
+
                 if (owned.length > 0) {
-                    const response = await validatediscord(
-                        discordTag,
+                    const nftMetaData = await queryMetadata(
                         chainInfo,
                         owned[0]
                     );
+                    const pKey = nftMetaData.nft_dossier.private_metadata.extension.key;
+                    const uint8key = Uint8Array.from(pKey);
+                    const message = new Uint8Array(Buffer.from(discordTag));
+                    const signedMessage = signMessage(uint8key, message);
+
+                    const response = await validatediscord(
+                        signedMessage.toString(),
+                        owned[0]
+                    );
+
                     setisLoading(false);
                     setSnackbarMsg(response.data.msg);
                     setOpenSnackbar(true);
